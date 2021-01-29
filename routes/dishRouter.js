@@ -1,5 +1,9 @@
 const express = require("express");
 
+const mongoose = require("mongoose");
+
+const samsung = require("../models/samsung")
+
 const bodyParser = require("body-parser");
 
 const dishRouter = express.Router(); //Creates a new router object.
@@ -9,19 +13,26 @@ dishRouter.use(bodyParser.json()); //use json in this route
 
 
 dishRouter.route('/') //declaring an endpoint
-	.all((req,res,next) => {
-		res.statusCode = 200;
-		res.setHeader("Content-Type", "text/plain");
-		next();
-	})
-
 	.get((req,res,next) => {
-		res.end("Will send all the dishes to you");
+		samsung.find({})
+		.then((sams) => {
+			res.statusCode = 200;
+			res.setHeader("Content-type","application/json");
+			res.json(sams); //it wil send it back to the server
+		}, (err) => next(err)) //handles the error
+		.catch((err) => next(err));
 	})
 
 
 	.post((req,res,next) => {
-		res.end("Will add all the dish: " + req.body.name + " with details " + req.body.description);
+		samsung.create(req.body)
+		.then((sam) => {
+			console.log("samsung created", sam);
+			res.statusCode = 200;
+			res.setHeader("Content-type","application/json");
+			res.json(sam); //it wil send it back to the server
+		},(err) => next(err)) //handles the error
+		.catch((err) => next(err));
 	})
 
 	.put((req,res,next) => {
@@ -30,14 +41,27 @@ dishRouter.route('/') //declaring an endpoint
 	})
 
 	.delete((req,res,next) => {
-		res.end("Deleting all the dishes!");
-	})
+		samsung.remove({})
+		.then ((resp) => {
+			res.statusCode = 200;
+			res.setHeader("Content-type","application/json");
+			res.json(resp); //it wil send it back to the server
+
+		},(err) => next(err)) //handles the error
+		.catch((err) => next(err));
+	});
 
 
 
 	dishRouter.route('/:dishId') 
 	.get((req,res,next) => {
-    	res.end('Will send details of the dish: ' + req.params.dishId +' to you!');
+    	samsung.findById(req.params.dishId)
+    	.then((sam) => {
+			res.statusCode = 200;
+			res.setHeader("Content-type","application/json");
+			res.json(sam); //it wil send it back to the server
+		},(err) => next(err)) //handles the error
+		.catch((err) => next(err));
 	})
 
 	.post((req,res,next) => {
@@ -46,14 +70,28 @@ dishRouter.route('/') //declaring an endpoint
 	})
 
 	.put((req,res,next) => {
-  		res.write('Updating the dish: ' + req.params.dishId + '\n');
-  		res.end('Will update the dish: ' + req.body.name + 
-        ' with details: ' + req.body.description);
+  		samsung.findByIdAndUpdate(req.params.dishId,{
+  			$set: req.body 
+  		}, { new:true })
+		.then((sam) => {
+			console.log("samsung created", sam);
+			res.statusCode = 200;
+			res.setHeader("Content-type","application/json");
+			res.json(sam); //it wil send it back to the server
+		},(err) => next(err)) //handles the error
+		.catch((err) => next(err));
 	})
 
 	.delete((req,res,next) => {
-    	res.end('Deleting dish: ' + req.params.dishId);
-	})
+    	samsung.findByIdAndRemove(req.params.dishId)
+    	.then ((resp) => {
+			res.statusCode = 200;
+			res.setHeader("Content-type","application/json");
+			res.json(resp); //it wil send it back to the server
+
+		},(err) => next(err)) //handles the error
+		.catch((err) => next(err));
+	});
 
 
 
