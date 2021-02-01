@@ -6,6 +6,10 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require("express-session");
 var FileStore = require("session-file-store")(session);
+var passport = require("passport");
+var authenticate = require("./authenticate");
+
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var dishRouter = require("./routes/dishRouter");
@@ -17,7 +21,7 @@ const samsung = require("./models/samsung");
 const promotions = require("./models/promotions");
 const leaders = require("./models/leaders");
 //Mongo db connection
-const url = "mongodb://localhost:27017/conFusionserver";
+const url = "mongodb://localhost:27017/conFusion";
 const connect = mongoose.connect(url);
 
 connect.then((db) => {
@@ -46,6 +50,9 @@ app.use(session( {
 
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
@@ -54,10 +61,9 @@ function auth (req, res, next) {
   console.log(req.session);
 
   //if not logged in then
-  if(!req.session.user) { 
+  if(!req.user) { 
   	  var err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 401;
+      err.status = 403;
       return next(err);
   }
 
@@ -66,9 +72,7 @@ else { //if logged in then
 	next(); //allow the request to pass through	
 	}
 	else {
-	  var err = new Error('You are not authenticated!');
-      err.status = 401;
-     return next(err);
+	  next();
 	}
   }
 }
