@@ -8,7 +8,7 @@ var session = require("express-session");
 var FileStore = require("session-file-store")(session);
 var passport = require("passport");
 var authenticate = require("./authenticate");
-
+var config = require("./config");
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -21,7 +21,7 @@ const samsung = require("./models/samsung");
 const promotions = require("./models/promotions");
 const leaders = require("./models/leaders");
 //Mongo db connection
-const url = "mongodb://localhost:27017/conFusion";
+const url = config.mongoUrl;
 const connect = mongoose.connect(url);
 
 connect.then((db) => {
@@ -41,42 +41,13 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //app.use(cookieParser('58586-75848-74774-68663')); //cookie parser
-app.use(session( {
-	name:"session-id",
-	secret:"1234-6433-45643-65433",
-	saveUninitialized:false,
-	resave:false,
-	store: new FileStore()
 
-}));
 
 app.use(passport.initialize());
-app.use(passport.session());
+
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
-function auth (req, res, next) {
- 
-  console.log(req.session);
-
-  //if not logged in then
-  if(!req.user) { 
-  	  var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
-  }
-
-else { //if logged in then	
-	if(req.session.user === "authenticated") { //if the signed cookie has correct information
-	next(); //allow the request to pass through	
-	}
-	else {
-	  next();
-	}
-  }
-}
-app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 

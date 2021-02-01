@@ -2,8 +2,10 @@ var express = require('express');
 const bodyParser = require("body-parser");
 var User = require("../models/user");
 var passport = require("passport");
-
+var authenticate = require("../authenticate");
 var router = express.Router();
+
+
 router.use(bodyParser.json());
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -30,10 +32,11 @@ router.post("/signup", function(req, res, next) {
 });		
 
 //passport local authentication used in login
-router.post("/login", passport.authenticate("local"), (req, res) => {
+router.post("/login", passport.authenticate("local"), (req, res) => { //if token is successfully created by the server then that will be sent back to client
+	var token = authenticate.getToken({_id: req.user._id});
 	res.statusCode = 200;
 	res.setHeader("Content-Type", "app/json");
-	res.json({success:true, status:"You are successfully logged in"});
+	res.json({success:true, token:token, status:"You are successfully logged in"});
 });
 
 //handling the logout of the session
