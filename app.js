@@ -46,41 +46,25 @@ app.use(session( {
 
 }));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 function auth (req, res, next) {
  
   console.log(req.session);
 
-  if(!req.session.user) {
-  	
-  	var authHeader = req.headers.authorization;
-  	
-  	if (!authHeader) {
-      var err = new Error('You are not authenticated!');
+  //if not logged in then
+  if(!req.session.user) { 
+  	  var err = new Error('You are not authenticated!');
       res.setHeader('WWW-Authenticate', 'Basic');
       err.status = 401;
       return next(err);
   }
 
-  var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-  var user = auth[0];
-  var pass = auth[1];
-  if (user == 'admin' && pass == 'password') { //default values
-    req.session.user = 'admin';  
-    next(); // authorized
-  } else {
-      var err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic');      
-      err.status = 401;
-      return next(err);
-  	}
-  }
-
-else {
-	
-	if(req.session.user === "admin") { //if the signed cookie has correct information
+else { //if logged in then	
+	if(req.session.user === "authenticated") { //if the signed cookie has correct information
 	next(); //allow the request to pass through	
 	}
-	
 	else {
 	  var err = new Error('You are not authenticated!');
       err.status = 401;
@@ -93,11 +77,8 @@ app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
 //to mount the urls to files
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use("/dishes", dishRouter);
 app.use("/promotions", promoRouter);
-//app.use("/promotions/:promoId", promoRouter);
 app.use("/leaders", leadersRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
