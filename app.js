@@ -32,6 +32,16 @@ connect.then((db) => {
 
 var app = express();
 
+//for all request coming in
+app.all("*", (req, res, next) => {
+	if(req.secure) {
+		return next();
+	}
+	else {//if it accesses the insecure 3000 port then this will redirect it to the secure port 3443
+		res.redirect(307, "https://" + req.hostname + ":" + app.get("secPort") + req.url); //redirects the insecure request
+	}
+});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
