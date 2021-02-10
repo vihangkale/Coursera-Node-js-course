@@ -3,12 +3,14 @@ const bodyParser = require("body-parser");
 var User = require("../models/user");
 var passport = require("passport");
 var authenticate = require("../authenticate");
+const cors = require("./cors");
 var router = express.Router();
 
-
 router.use(bodyParser.json());
+
+
 /* GET users listing. */
-router.get('/',authenticate.verifyUser,authenticate.verifyAdmin ,function(req, res, next) {
+router.get('/',cors.corsWithOptions,authenticate.verifyUser,authenticate.verifyAdmin , (req, res, next) => {
   User.find({}, (err, users) => {
   	if(err) {
   		return next(err);
@@ -22,7 +24,7 @@ router.get('/',authenticate.verifyUser,authenticate.verifyAdmin ,function(req, r
 });
 
 //passport local authentication
-router.post("/signup", (req, res, next) => {
+router.post("/signup",cors.corsWithOptions, (req, res, next) => {
 		User.register(new User({
 			username: req.body.username
 		}), 
@@ -65,31 +67,11 @@ router.post("/signup", (req, res, next) => {
 });		
 
 //passport local authentication used in login
-router.post('/login', function(req, res, next) {
-  passport.authenticate('local', function(err, user, info) {
-    if (err) {
-      return next(err);
-    }
-    if (!user) {
-      return res.status(401).json({
-        err: info
-      });
-    }
-    req.logIn(user, function(err) {
-      if (err) {
-        return res.status(500).json({
-          err: 'Could not log in user'
-        });
-      }
-        
-      var token = Verify.getToken(user);
-              res.status(200).json({
-        status: 'Login successful!',
-        success: true,
-        token: token
-      });
-    });
-  })(req,res,next);
+router.post('/login',cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
+var token = authenticate.getToken({_id: req.user._id});
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json');
+  res.json({success: true, token: token, status: 'You are successfully logged in!'});
 });
 
 //handling the logout of the session
@@ -104,6 +86,17 @@ router.get("/logout",(req, res) => {
 		err.status = 403;
 		next(err);
 	}	
+});
+
+//express server will return a json web token to our client
+
+router.get('/facebook/token', passport.authenticate('facebook-token'), (req, res) => {
+  if (req.user) {
+    var token = authenticate.getToken({_id: req.user._id});
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.json({success: true, token: token, status: 'You are successfully logged in!'});
+  }
 });
 
 module.exports = router;

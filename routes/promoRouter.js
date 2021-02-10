@@ -3,15 +3,20 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose=  require("mongoose");
 const promotions = require("../models/promotions");
+const cors = require("./cors");
+
 const authenticate = require("../authenticate");
+
 const promoRouter = express.Router(); //Creates a new router object.
 
 promoRouter.use(bodyParser.json()); //use json in this route
 
 
 
-	promoRouter.route('/') //declaring an endpoint
-	.get((req,res,next) => {
+	promoRouter.route('/') //declaring an endpoint	   .options(cors.corsWithOptions, (req, res) => { res.senStatus(200);})   
+    .options(cors.corsWithOptions, (req, res) => { res.senStatus(200);})   
+
+    .get(cors.cors,(req,res,next) => {
 		promotions.find({})
 		.then((promos) => {
 			res.statusCode = 200;
@@ -22,7 +27,7 @@ promoRouter.use(bodyParser.json()); //use json in this route
 	})
 
 
-	.post(authenticate.verifyUser,(req,res,next) => {
+	.post(cors.corsWithOptions,authenticate.verifyUser,(req,res,next) => {
 		promotions.create(req.body)
     	.then((promo) => {
         	console.log('Promos Created ', promo);
@@ -33,12 +38,12 @@ promoRouter.use(bodyParser.json()); //use json in this route
     .catch((err) => next(err));
 	})
 
-	.put(authenticate.verifyUser,(req,res,next) => {
+	.put(cors.corsWithOptions,authenticate.verifyUser,(req,res,next) => {
 		res.statusCode = 403;
 		res.end("Put operation not supported on the /promotions");
 	})
 
-	.delete(authenticate.verifyUser,(req,res,next) => {
+	.delete(cors.corsWithOptions,authenticate.verifyUser,(req,res,next) => {
 		promotions.remove({})
     	.then((resp) => {
         res.statusCode = 200;
@@ -51,7 +56,9 @@ promoRouter.use(bodyParser.json()); //use json in this route
 
 
 	promoRouter.route('/:promoId') 
-	.get((req,res,next) => {
+	   .options(cors.corsWithOptions, (req, res) => { res.senStatus(200);})   
+
+    .get(cors.cors,(req,res,next) => {
     promotions.findById(req.params.promoId)
     .then((promo) => {
         res.statusCode = 200;
@@ -61,12 +68,12 @@ promoRouter.use(bodyParser.json()); //use json in this route
     .catch((err) => next(err));
 	})
 
-	.post(authenticate.verifyUser,(req,res,next) => {
+	.post(cors.corsWithOptions,authenticate.verifyUser,(req,res,next) => {
   		res.statusCode = 403;
   		res.end('POST operation not supported on /promotions/'+ req.params.promoId);
 	})
 
-	.put(authenticate.verifyUser,(req,res,next) => {
+	.put(cors.corsWithOptions,authenticate.verifyUser,(req,res,next) => {
   	promotions.findByIdAndUpdate(req.params.promoId, {
         $set: req.body
     }, { new: true })
@@ -78,7 +85,7 @@ promoRouter.use(bodyParser.json()); //use json in this route
     .catch((err) => next(err));
 	})
 
-	.delete(authenticate.verifyUser,(req,res,next) => {
+	.delete(cors.corsWithOptions,authenticate.verifyUser,(req,res,next) => {
     	promotions.findByIdAndRemove(req.params.promoId)
     .then((resp) => {
         res.statusCode = 200;
